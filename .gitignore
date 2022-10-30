@@ -8,10 +8,6 @@
 *.obj
 
 
-# Files by extension
-*.user
-*.vcxproj
-*.vcxproj.filters
 
 # Directories
 .vs/
@@ -22,13 +18,12 @@ bin-int/
 
 *.log
 *.ini
-*.sln
 *.csproj
 
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+
 
 # Fortran module files
 *.mod
@@ -38,7 +33,7 @@ bin-int/
 *.lai
 *.la
 *.a
-#*.lib
+
 
 # Executables
 *.exe

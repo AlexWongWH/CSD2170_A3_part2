@@ -26,6 +26,12 @@ struct Vertex {
 	float uv[2];
 };
 
+struct {
+	unsigned int histoBin[256];
+	float cdf[256];
+} bufferHistoeq;
+
+
 class VulkanExample : public VkAppBase
 {
 private:
@@ -291,6 +297,7 @@ public:
 
 	}
 
+	//called after
 	void buildComputeCommandBuffer()
 	{
 		// Flush the queue if we're rebuilding the command buffer after a pipeline change to ensure it's not currently in use
@@ -382,6 +389,7 @@ public:
 		VK_CHECK_RESULT(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &descriptorPool));
 	}
 
+	//graphics descriptor set LAYOUT
 	void setupDescriptorSetLayout()
 	{
 		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = {
@@ -398,6 +406,7 @@ public:
 		VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &graphics.pipelineLayout));
 	}
 
+	//graphics descriptor set
 	void setupDescriptorSet()
 	{
 		VkDescriptorSetAllocateInfo allocInfo =
@@ -519,7 +528,8 @@ public:
 		// Create compute pipeline
 		// Compute pipelines are created separate from graphics pipelines even if they use the same queue
 
-		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = {
+		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = 
+		{
 			// Binding 0: Input image (read-only)
 			vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 0),
 			// Binding 1: Output image (write)
@@ -579,8 +589,82 @@ public:
 		VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &compute.semaphore));
 
 		// Build a single command buffer containing the compute dispatch commands
+		//buildComputeCommandBuffer();
+	}
+
+
+	void prepareComputeCDF()
+	{
+		// Get a compute queue from the device
+		vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.compute, 0, &compute.queue);
+
+		// Create compute pipeline
+		// Compute pipelines are created separate from graphics pipelines even if they use the same queue
+
+		//std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
+		//{
+		//	// Binding 0: Input image (read-only)
+		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 0),
+		//	// Binding 1: Output image (write)
+		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 1),
+		//};
+
+		//VkDescriptorSetLayoutCreateInfo descriptorLayout = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
+		//VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &compute.descriptorSetLayout));
+
+		//VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
+		//	vks::initializers::pipelineLayoutCreateInfo(&compute.descriptorSetLayout, 1);
+
+		//VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &compute.pipelineLayout));
+
+		//VkDescriptorSetAllocateInfo allocInfo =
+		//	vks::initializers::descriptorSetAllocateInfo(descriptorPool, &compute.descriptorSetLayout, 1);
+
+		//VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &compute.descriptorSet));
+		//std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = {
+		//	vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
+		//	vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor)
+		//};
+		//vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
+
+		// Create compute shader pipelines
+		VkComputePipelineCreateInfo computePipelineCreateInfo =
+			vks::initializers::computePipelineCreateInfo(compute.pipelineLayout, 0);
+
+		// One pipeline for each effect
+		shaderNames = { "edgedetect" };
+		for (auto& shaderName : shaderNames) {
+			std::string fileName = getShadersPath() + "computeshader/" + shaderName + ".comp.spv";
+			computePipelineCreateInfo.stage = loadShader(fileName, VK_SHADER_STAGE_COMPUTE_BIT);
+			VkPipeline pipeline;
+			VK_CHECK_RESULT(vkCreateComputePipelines(device, pipelineCache, 1, &computePipelineCreateInfo, nullptr, &pipeline));
+			compute.pipelines.push_back(pipeline);
+		}
+
+		// Separate command pool as queue family for compute may be different than graphics
+		VkCommandPoolCreateInfo cmdPoolInfo = {};
+		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		cmdPoolInfo.queueFamilyIndex = vulkanDevice->queueFamilyIndices.compute;
+		cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		VK_CHECK_RESULT(vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &compute.commandPool));
+
+		// Create a command buffer for compute operations
+		VkCommandBufferAllocateInfo cmdBufAllocateInfo =
+			vks::initializers::commandBufferAllocateInfo(
+				compute.commandPool,
+				VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+				1);
+
+		VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &compute.commandBuffer));
+
+		// Semaphore for compute & graphics sync
+		VkSemaphoreCreateInfo semaphoreCreateInfo = vks::initializers::semaphoreCreateInfo();
+		VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &compute.semaphore));
+
+		// Build a single command buffer containing the compute dispatch commands
 		buildComputeCommandBuffer();
 	}
+
 
 	// Prepare and initialize uniform buffer containing shader uniforms
 	void prepareUniformBuffers()
@@ -623,7 +707,7 @@ public:
 		VkAppBase::prepareFrame();
 
 		VkPipelineStageFlags graphicsWaitStageMasks[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		VkSemaphore graphicsWaitSemaphores[] = { compute.semaphore, semaphores.presentComplete };
+		VkSemaphore graphicsWaitSemaphores[] = { compute.semaphore, semaphores.presentComplete }; // change to apply semaphore 
 		VkSemaphore graphicsSignalSemaphores[] = { graphics.semaphore, semaphores.renderComplete };
 
 		// Submit graphics commands
@@ -653,6 +737,7 @@ public:
 		setupDescriptorSet();
 		prepareGraphics();
 		prepareCompute();
+		prepareComputeCDF();
 		buildCommandBuffers();
 		prepared = true;
 	}
@@ -667,6 +752,7 @@ public:
 		}
 	}
 
+	//look into this
 	virtual void OnUpdateUIOverlay(vks::UIOverlay* overlay)
 	{
 		if (overlay->header("Settings")) {

@@ -36,7 +36,7 @@ namespace vks
 		std::string filename = "";
 		////@william
 		//std::string sourcefile = "lena.txt";
-		std::string sourcefile = "lena.txt";
+		std::string sourcefile = "lena.ktx";
 
 		double runtime = 0.0;
 		uint32_t frameCount = 0;

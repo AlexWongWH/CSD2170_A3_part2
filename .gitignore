@@ -7,9 +7,23 @@
 *.o
 *.obj
 
-# Precompiled Headers
-*.gch
-*.pch
+
+# Files by extension
+*.user
+*.vcxproj
+*.vcxproj.filters
+
+# Directories
+.vs/
+Release/
+bin-int/
+
+#.tlog
+
+*.log
+*.ini
+*.sln
+*.csproj
 
 # Compiled Dynamic libraries
 *.so
@@ -24,7 +38,7 @@
 *.lai
 *.la
 *.a
-*.lib
+#*.lib
 
 # Executables
 *.exe

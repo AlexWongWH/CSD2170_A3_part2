@@ -318,11 +318,8 @@ public:
 	//{
 	//	// Flush the queue if we're rebuilding the command buffer after a pipeline change to ensure it's not currently in use
 	//	vkQueueWaitIdle(compute.queue);
-
 	//	VkCommandBufferBeginInfo cmdBufInfo = vks::initializers::commandBufferBeginInfo();
-
 	//	VK_CHECK_RESULT(vkBeginCommandBuffer(compute.commandBuffer, &cmdBufInfo));
-
 	//	//instance the amount of pipeline created in
 	//	//for(auto i {0}; i < compute.pipelines.size(); ++i )
 	//	//{
@@ -333,14 +330,12 @@ public:
 	//	//	//groupCountZ is the number of local workgroups to dispatch in the Z dimension.
 	//	//	vkCmdDispatch(compute.commandBuffer, (textureComputeTarget.width + 15) / 16, (textureComputeTarget.height + 15) / 16, 1);
 	//	//}
-
 	//	//vkCmdBindPipeline(compute.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute.pipelines[2]);
 	//	//vkCmdBindDescriptorSets(compute.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute.pipelineLayout, 0, 1, &compute.descriptorSet, 0, 0);
 	//	////groupCountX is the number of local workgroups to dispatch in the X dimension.
 	//	////groupCountY is the number of local workgroups to dispatch in the Y dimension.
 	//	////groupCountZ is the number of local workgroups to dispatch in the Z dimension.
 	//	//vkCmdDispatch(compute.commandBuffer, (textureComputeTarget.width + 15)/ 16, (textureComputeTarget.height + 15) / 16, 1);
-
 	//	vkEndCommandBuffer(compute.commandBuffer);
 	//}
 
@@ -376,7 +371,6 @@ public:
 
 		VK_CHECK_RESULT(vkBeginCommandBuffer(compute.CdfCommandBuffer, &cmdBufInfo));
 
-
 		vkCmdBindPipeline(compute.CdfCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute.pipelines[1]);
 		//same pipeline layout and descriptor set
 		vkCmdBindDescriptorSets(compute.CdfCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute.pipelineLayout, 0, 1, &compute.descriptorSet, 0, 0);
@@ -387,8 +381,6 @@ public:
 
 		vkEndCommandBuffer(compute.CdfCommandBuffer);
 	}
-
-
 
 	// Setup vertices for a single uv-mapped quad
 	void generateQuad()
@@ -448,6 +440,7 @@ public:
 		vertices.inputState.pVertexAttributeDescriptions = vertices.attributeDescriptions.data();
 	}
 
+	//create pool for storage buffers
 	void setupDescriptorPool()
 	{
 		std::vector<VkDescriptorPoolSize> poolSizes = {
@@ -600,10 +593,8 @@ public:
 	//{
 	//	// Get a compute queue from the device
 	//	vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.compute, 0, &compute.queue);
-
 	//	// Create compute pipeline
 	//	// Compute pipelines are created separate from graphics pipelines even if they use the same queue
-
 	//	std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = 
 	//	{
 	//		// Binding 0: Input image (read-only)
@@ -611,29 +602,22 @@ public:
 	//		// Binding 1: Output image (write)
 	//		vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 1),
 	//	};
-
 	//	VkDescriptorSetLayoutCreateInfo descriptorLayout = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
 	//	VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &compute.descriptorSetLayout));
-
 	//	VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
 	//		vks::initializers::pipelineLayoutCreateInfo(&compute.descriptorSetLayout, 1);
-
 	//	VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &compute.pipelineLayout));
-
 	//	VkDescriptorSetAllocateInfo allocInfo =
 	//		vks::initializers::descriptorSetAllocateInfo(descriptorPool, &compute.descriptorSetLayout, 1);
-
 	//	VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &compute.descriptorSet));
 	//	std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = {
 	//		vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
 	//		vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor)
 	//	};
 	//	vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
-
 	//	// Create compute shader pipelines
 	//	VkComputePipelineCreateInfo computePipelineCreateInfo =
 	//		vks::initializers::computePipelineCreateInfo(compute.pipelineLayout, 0);
-
 	//	// One pipeline for each effect
 	//	shaderNames = { "emboss" };
 	//	for (auto& shaderName : shaderNames) {
@@ -643,27 +627,22 @@ public:
 	//		VK_CHECK_RESULT(vkCreateComputePipelines(device, pipelineCache, 1, &computePipelineCreateInfo, nullptr, &pipeline));
 	//		compute.pipelines.push_back(pipeline);
 	//	}
-
 	//	// Separate command pool as queue family for compute may be different than graphics
 	//	VkCommandPoolCreateInfo cmdPoolInfo = {};
 	//	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	//	cmdPoolInfo.queueFamilyIndex = vulkanDevice->queueFamilyIndices.compute;
 	//	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	//	VK_CHECK_RESULT(vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &compute.commandPool));
-
 	//	// Create a command buffer for compute operations
 	//	VkCommandBufferAllocateInfo cmdBufAllocateInfo =
 	//		vks::initializers::commandBufferAllocateInfo(
 	//			compute.commandPool,
 	//			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 	//			1);
-
 	//	VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &compute.commandBuffer));
-
 	//	// Semaphore for compute & graphics sync
 	//	VkSemaphoreCreateInfo semaphoreCreateInfo = vks::initializers::semaphoreCreateInfo();
 	//	VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &compute.semaphore));
-
 	//	// Build a single command buffer containing the compute dispatch commands
 	//	//buildComputeCommandBuffer();
 	//}
@@ -708,7 +687,7 @@ public:
 			vks::initializers::computePipelineCreateInfo(compute.pipelineLayout, 0);
 
 		// One pipeline for each effect
-		shaderNames = { "edgedetect" };
+		shaderNames = { "cdfScan" };
 		for (auto& shaderName : shaderNames) {
 			std::string fileName = getShadersPath() + "computeshader/" + shaderName + ".comp.spv";
 			computePipelineCreateInfo.stage = loadShader(fileName, VK_SHADER_STAGE_COMPUTE_BIT);
@@ -741,7 +720,7 @@ public:
 		buildComputeCDFCommandBuffer();
 	}
 
-	//this is called first
+	//1st part this is called first
 	void prepareComputeHisto()
 	{
 		// Get a compute queue from the device
@@ -774,9 +753,11 @@ public:
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &compute.descriptorSet));
 
 		//array of VkWriteDescriptorSet for each of the resources that a descriptor set points to
-		std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = {
+		std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = 
+		{
 			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
-			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor)
+			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor),
+			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2, &m_storageBuffer.descriptor) // write descriptor
 		};
 
 		//this commands makes it point to the relevant buffers
@@ -787,7 +768,7 @@ public:
 			vks::initializers::computePipelineCreateInfo(compute.pipelineLayout, 0);
 
 		// One pipeline for each effect
-		shaderNames = { "histo" };
+		shaderNames = { "histogram" };
 		for (auto& shaderName : shaderNames) {
 			std::string fileName = getShadersPath() + "computeshader/" + shaderName + ".comp.spv";
 			computePipelineCreateInfo.stage = loadShader(fileName, VK_SHADER_STAGE_COMPUTE_BIT);
@@ -915,7 +896,7 @@ public:
 	{
 		for(auto i {0}; i < 256 ; ++i)
 		{
-			bufferHistoeq.cdf[i] = 0.f;
+			bufferHistoeq.cdf[i] = 0.5f;
 			bufferHistoeq.histoBin[i] = 0;
 		}
 		memcpy(m_storageBuffer.mapped, &bufferHistoeq, sizeof(bufferHistoeq));
@@ -961,15 +942,16 @@ public:
 		computeSubmitInfo.pSignalSemaphores = &compute.HistoSemaphore;
 		VK_CHECK_RESULT(vkQueueSubmit(compute.queue, 1, &computeSubmitInfo, VK_NULL_HANDLE));
 
+
 		VkSubmitInfo CDFcomputeSubmitInfo = vks::initializers::submitInfo();
 		CDFcomputeSubmitInfo.commandBufferCount = 1;
-		CDFcomputeSubmitInfo.pCommandBuffers = &compute.ApplyCommandBuffer;
+		CDFcomputeSubmitInfo.pCommandBuffers = &compute.CdfCommandBuffer;
 		CDFcomputeSubmitInfo.waitSemaphoreCount = 1;
 		CDFcomputeSubmitInfo.pWaitSemaphores = &compute.HistoSemaphore; // waiting on histo semaphore
 		CDFcomputeSubmitInfo.pWaitDstStageMask = &waitStageMask;
 		CDFcomputeSubmitInfo.signalSemaphoreCount = 1;
 		CDFcomputeSubmitInfo.pSignalSemaphores = &compute.CdfSemaphore;
-		VK_CHECK_RESULT(vkQueueSubmit(compute.queue, 1, &computeSubmitInfo, VK_NULL_HANDLE));
+		VK_CHECK_RESULT(vkQueueSubmit(compute.queue, 1, &CDFcomputeSubmitInfo, VK_NULL_HANDLE));
 
 
 
@@ -999,7 +981,7 @@ public:
 		generateQuad();
 		setupVertexDescriptions();
 		prepareUniformBuffers();
-		prepareStorageBuffer(); // my function to map buffer to
+		prepareStorageBuffer(); // my function to init storage buffer to 0.f map buffer to
 		prepareTextureTarget(&textureComputeTarget, textureColorMap.width, textureColorMap.height, VK_FORMAT_R8G8B8A8_UNORM);
 		setupDescriptorSetLayout();
 		preparePipelines();

@@ -1,11 +1,23 @@
 #version 450
 
 
-#define HISTOGRAM256 BIN COUNT 256
+#define HISTOGRAM256BINCOUNT 256
 
 layout (local_size_x = 16, local_size_y = 16) in;
 layout (binding = 0, rgba8) uniform readonly image2D inputImage;
 layout (binding = 1, rgba8) uniform image2D resultImage;
+
+
+struct bufferHistoeq
+{
+	uint histoBin[256];
+	float cdf[256];
+};
+
+layout (binding = 2) buffer StorageBuffer
+{
+	bufferHistoeq buf;
+} storageBuffer;
 
 float conv(in float[9] kernel, in float[9] data, in float denom, in float offset) 
 {
@@ -26,13 +38,21 @@ void main()
 {	
 	// Pixel color form the image
     vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
+	
+	// storageBuffer.buf.histoBin[0];
 
 	float[9] kernel;
 	kernel[0] = -1.0; kernel[1] =  0.0; kernel[2] =  0.0;
 	kernel[3] = 0.0; kernel[4] = -1.0; kernel[5] =  0.0;
 	kernel[6] = 0.0; kernel[7] =  0.0; kernel[8] = 2.0;
 									
-	vec4 res = vec4(vec3(conv(kernel, imageData.avg, 1.0, 0.50)), 1.0);
+	// vec4 res = vec4(vec3(conv(kernel, imageData.avg, 1.0, 0.50)), 1.0);
+	// vec4 res = vec4(vec3(storageBuffer.buf.histoBin[0],0.f,0.f),1.f);
+
+	//greenish look
+	vec4 res = vec4(pixel_color.r * storageBuffer.buf.histoBin[0] , pixel_color.g,pixel_color.b , pixel_color.w);
+
+	storageBuffer.buf.histoBin[0] = 1;
 
 	imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res);
 }

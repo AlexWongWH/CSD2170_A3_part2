@@ -64,11 +64,21 @@ void main()
 	// memoryBarrier();	
 	// barrier();
 	//histogram on Y component
+
+
+	// Shaders are from 0~1
 	atomicAdd(storageBuffer.buf.histoBin[uint(y*255)],1); // this line might be wrong
 	// int i = (xy_int.y * size.x) + xy_int.x; 	// calcualte the index
-	storageBuffer.buf.histoBin[0] = 100;
-	// atomicAdd(storageBuffer.buf.histoBin[i],1); // this line might be wrong
+	// storageBuffer.buf.histoBin[0] = 100;
 
+	for( uint i = 0 ; i < 256; ++i)
+	{
+		storageBuffer.buf.histoBin[i] = 1512;
+		storageBuffer.buf.cdf[i] = 512;
+	}
+
+	barrier();
+	// atomicAdd(storageBuffer.buf.histoBin[i],1); // this line might be wrong
 
 
 }

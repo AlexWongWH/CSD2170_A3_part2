@@ -1,0 +1,71 @@
+#version 450
+
+
+#define HISTOGRAM256BINCOUNT 256
+
+#define mymin(a,b)((( a ) < ( b )) ? ( a ) : ( b ) )
+#define mymax(a,b)((( a ) > ( b )) ? ( a ) : ( b ) )
+
+//change to function
+#define PROB(x ,width, height) (x) / ((width) * (height))
+#define CLAMP(x, start, end) (mymin(mymax((x),(start)),(end)))
+#define CORRECT_COLOR(cdfVal, cdfMin) CLAMP(1 * ((cdfVal) - (cdfMin)) /(1 - (cdfMin)), 0.0 ,1.0 )
+
+layout (local_size_x = 16, local_size_y = 16) in;
+layout (binding = 0, rgba8) uniform readonly image2D inputImage;
+layout (binding = 1, rgba8) uniform image2D resultImage;
+
+struct bufferHistoeq
+{
+	uint histoBin[256];
+	float cdf[256];
+};
+
+//shd be set 0 , binding 2
+layout (binding = 2) buffer StorageBuffer
+{
+	bufferHistoeq buf;
+} storageBuffer;
+
+shared float scan[2 * HISTOGRAM256BINCOUNT]; // declare shared memory
+
+
+//when to use shared memory?
+//when to use atomic add?
+
+void main()
+{
+	// storageBuffer.buf.histoBin[0];
+	// // vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
+	// // vec4 res = vec4(pixel_color.r  * storageBuffer.buf.cdf[0], pixel_color.g,pixel_color.b , pixel_color.w);
+	// // imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res);
+
+	// float cdfMinY = storageBuffer.buf.cdf[0]; // min cdf value
+
+	// // uint tx = gl_LocalInvocationID.x;
+	// // uint tx = gl_GlobalInvocationID.x;
+
+    // ivec2 size = imageSize(inputImage); 			// gets the image2d size
+
+	// ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
+	// vec4 pixel_color = imageLoad(inputImage, xy_int);
+	
+	// uint i = (gl_GlobalInvocationID.y * size.x) + gl_GlobalInvocationID.x; 		// calcualte the index
+	// float y = CORRECT_COLOR(storageBuffer.buf.cdf[i], cdfMinY  );
+
+	// // float y = CORRECT_COLOR(storageBuffer.buf.cdf[uint(pixel_color.r)], cdfMinY  );
+	// float u =  pixel_color.g - 0.5f;
+	// float v =  pixel_color.b - 0.5f;
+	
+	// float r = clamp(y + 1.402 * v, 0 , 1.f);
+	// float g = clamp(y - 0.344 * u - 0.714 * v, 0 , 1.f); 
+	// float b = clamp(y + 1.772 * u , 0 , 1.f);
+	
+
+	// // vec4 res = vec4(r,g,b,pixel_color.w);
+	// vec4 res = vec4(r,g,b,1);
+
+	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res);
+
+
+}

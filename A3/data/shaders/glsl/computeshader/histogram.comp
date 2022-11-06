@@ -25,50 +25,56 @@ void main()
 {	
 
 
-	ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
+	// for(int i = 0 ;i < HISTOGRAM256BINCOUNT; ++i)
+	{
+    	ivec2 imgSize = imageSize(inputImage); // gets the image2d size
+		ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
+		int i = (xy_int.y * imgSize.x) + xy_int.x; 	// calculate the index
+		storageBuffer.buf.histoBin[i] = 0;
+		storageBuffer.buf.cdf[i] = 0.f;
+	}
+
 
 	//might have to find better method
 	// Pixel color form the image
-	vec4 pixel_color = imageLoad(inputImage, xy_int);
+	// vec4 pixel_color = imageLoad(inputImage, xy_int);
+	// ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
+	vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
 	
-	// vec4 pixel2 = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y + size.x) );
-
-	float y = 0.299f * pixel_color.r + 0.587f * pixel_color.g + 0.114f * pixel_color.b;
-	float u = -0.169f * pixel_color.r - 0.331f * pixel_color.g + 0.499f * pixel_color.b + 0.5f;
-	float v = 0.499f * pixel_color.r - 0.418f * pixel_color.g - 0.0813f * pixel_color.b + 0.5f;
+	//clamp thrown in to one line
+	float y = clamp( (0.299f * pixel_color.r) + (0.587f * pixel_color.g) + (0.114f * pixel_color.b), 0 , 1 );
+	float u = clamp( ((-0.169f * pixel_color.r) + (-0.331f * pixel_color.g) + (0.499f * pixel_color.b)) + 0.5f , 0 , 1 );
+	float v = clamp( ((0.499f * pixel_color.r) + (-0.418f * pixel_color.g) + (-0.0813f * pixel_color.b)) + 0.5f, 0 , 1 );
 	
 	/*genType clamp( genType x, genType minVal, genType maxVal); */
-
-	float r = clamp(y, 0 , 1); // clamp between 0~255
-	float g = clamp(u, 0 , 1); // clamp between 0~255
-	float b = clamp(v, 0 , 1); // clamp between 0~255
-	// storageBuffer.buf.histoBin[]
+	// float r = clamp(y, 0 , 1); // clamp between 0~255
+	// float g = clamp(u, 0 , 1); // clamp between 0~255
+	// float b = clamp(v, 0 , 1); // clamp between 0~255
 	
-	// vec4 res = vec4(pixel_color.r, pixel_color.g, pixel_color.b, pixel_color.w);
-	vec4 res = vec4(r,g,b,pixel_color.w);
-	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res);
+	//// storing the result
+	// vec4 res = vec4(r,g,b,pixel_color.w);
+	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res); 
 
+    // ivec2 size = imageSize(inputImage); // gets the image2d size
+    // int imgSize = size.x * size.y; 		// img size, not used yet
 
-    ivec2 size = imageSize(inputImage); // gets the image2d size
-    int imgSize = size.x * size.y; 		// img size, not used yet
-
-	//histo[dataYUV[i]]++; // Histogram for Y
-
-	//this condition check might be useless
+	// //this condition check might be useless
 	// if( gl_GlobalInvocationID.x * gl_GlobalInvocationID.y < imgSize)
-	// {}
+	// {
+	// 	atomicAdd(storageBuffer.buf.histoBin[uint(r*255)],1); // this line might be wrong
+	// }
+
 	// i = (row * width) + col // should not need this
 	// atomicAdd(storageBuffer.buf.histoBin[i],1); // this line should be wrong
 	
+	// // memoryBarrier();	
+	// // barrier();
+	// histogram on Y component
+	//histo[dataYUV[i]]++; // Histogram for Y
+	atomicAdd(storageBuffer.buf.histoBin[uint(y*255)],1); // shd be correct (checked)
 
-	// memoryBarrier();	
-	// barrier();
-	//histogram on Y component
-	atomicAdd(storageBuffer.buf.histoBin[uint(y*255)],1); // this line might be wrong
-	// int i = (xy_int.y * size.x) + xy_int.x; 	// calcualte the index
-	storageBuffer.buf.histoBin[0] = 100;
-	// atomicAdd(storageBuffer.buf.histoBin[i],1); // this line might be wrong
-
-
+	//debug , checking if it's writing correctly
+	// storageBuffer.buf.histoBin[0] = 23;
+	// // storageBuffer.buf.cdf[0] = 0.5f;
 
 }

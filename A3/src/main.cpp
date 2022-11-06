@@ -714,7 +714,10 @@ public:
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &compute.CDFApplydescriptorSet));
 
 		std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = {
-			vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureComputeTarget.descriptor),
+
+			
+			vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
+			//vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureComputeTarget.descriptor),
 			vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor),
 			vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2, &m_storageBuffer.descriptor) // write descriptor
 
@@ -879,6 +882,17 @@ public:
 		//};
 		//vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
 
+		std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets =
+		{
+			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
+			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor),
+			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2, &m_storageBuffer.descriptor) // write descriptor
+		};
+
+		//this commands makes it point to the relevant buffers
+		vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
+
+
 		// Create compute shader pipelines
 		VkComputePipelineCreateInfo computePipelineCreateInfo =
 			vks::initializers::computePipelineCreateInfo(compute.pipelineLayout, 0);
@@ -939,7 +953,7 @@ public:
 	{
 		for(auto i {0}; i < 256 ; ++i)
 		{
-			bufferHistoeq.cdf[i] = 1.f;
+			bufferHistoeq.cdf[i] = 0.f;
 			bufferHistoeq.histoBin[i] = 0;
 		}
 		memcpy(m_storageBuffer.mapped, &bufferHistoeq, sizeof(bufferHistoeq));
@@ -1010,7 +1024,6 @@ public:
 
 
 		VkAppBase::prepareFrame();
-
 		VkPipelineStageFlags graphicsWaitStageMasks[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		VkSemaphore graphicsWaitSemaphores[] = { compute.ApplySemaphore, semaphores.presentComplete }; // change to apply semaphore 
 		VkSemaphore graphicsSignalSemaphores[] = { graphics.semaphore, semaphores.renderComplete };
@@ -1025,7 +1038,54 @@ public:
 		submitInfo.pSignalSemaphores = graphicsSignalSemaphores;
 		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
 
+
+
 		VkAppBase::submitFrame();
+
+		static bool first = true;
+		if(first)
+		{
+
+			// Move the data to the GPU
+			//memcpy(m_storageBuffer.mapped, &bufferHistoeq, sizeof(bufferHistoeq));
+
+			// Move the data back
+			memcpy(&bufferHistoeq, m_storageBuffer.mapped, sizeof(bufferHistoeq));
+
+			std::ofstream file("histogram.txt", std::ios::out | std::ios::binary);
+
+			//int chitsbin;
+			//chitsbin = 0;
+			//float cdfsum;
+			//cdfsum = 0.f;
+
+			file << "\n/*MINE ! histogram bins*/\n";
+
+			for (int i{ 1 }; i <= 256; ++i)
+			{
+				file << bufferHistoeq.histoBin[i - 1] << " "; // change this to storage buffer
+				if (i % 4 == 0)
+				{
+					file << "\n";
+				}
+			}
+
+			file << "\n/* Cdf */\n";
+			for (int i{ 1 }; i <= 256; ++i)
+			{
+				file << bufferHistoeq.cdf[i-1] << " "; // change this to storage buffer
+				if (i % 4 == 0)
+				{
+					file << "\n";
+				}
+			}
+
+			file.close();
+
+			first = false;
+		}
+
+
 	}
 
 	void prepare()
@@ -1057,31 +1117,6 @@ public:
 			return;
 		draw();
 
-		static bool first = true;
-		if(first)
-		{
-
-			std::cout << "\n";
-
-			std::ofstream file("histogram.txt", std::ios::out | std::ios::binary);
-
-			int chitsbin;
-			chitsbin = 0;
-			float cdfsum;
-			cdfsum = 0.f;
-
-			for (int i{ 0 }; i < 256; ++i)
-				file << bufferHistoeq.histoBin[i] << " ";
-
-			file << "\n";
-
-			for (int i{ 0 }; i < 256; ++i)
-				file << bufferHistoeq.cdf[i] << " ";
-
-			file.close();
-
-			first = false;
-		}
 
 
 		if (camera.updated) {

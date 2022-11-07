@@ -3,13 +3,15 @@
 
 #define HISTOGRAM256BINCOUNT 256
 
-#define mymin(a,b)((( a ) < ( b )) ? ( a ) : ( b ) )
-#define mymax(a,b)((( a ) > ( b )) ? ( a ) : ( b ) )
+// #define mymin(a,b)((( a ) < ( b )) ? ( a ) : ( b ) )
+// #define mymax(a,b)((( a ) > ( b )) ? ( a ) : ( b ) )
+// #define CLAMP(x, start, end) (mymin(mymax((x),(start)),(end)))
+// #define CORRECT_COLOR(cdfVal, cdfMin) CLAMP(255 * ((cdfVal) - (cdfMin)) /(1 - (cdfMin)), 0.0f , 255.0f )
 
-//change to function
-#define PROB(x ,width, height) (x) / ((width) * (height))
-#define CLAMP(x, start, end) (mymin(mymax((x),(start)),(end)))
-#define CORRECT_COLOR(cdfVal, cdfMin) CLAMP(1 * ((cdfVal) - (cdfMin)) /(1 - (cdfMin)), 0.0 ,1.0 )
+float CORRECT_COLOR(float cdfVal, float cdfMin)
+{
+  return clamp((cdfVal - cdfMin) / (1.0 - cdfMin), 0.0, 1.0);
+}
 
 layout (local_size_x = 16, local_size_y = 16) in;
 layout (binding = 0, rgba8) uniform readonly image2D inputImage;
@@ -21,6 +23,21 @@ struct bufferHistoeq
 	float cdf[256];
 };
 
+
+const mat3 YUV = mat3    
+(
+   0.299, -0.169,  0.499,
+   0.587, -0.331, -0.418,
+   0.114,  0.499, -0.0813
+);
+
+const mat3 RGB = mat3
+(
+  1.0,    1.0,   1.0,
+  0.0,   -0.344, 1.772,
+  1.402, -0.714, 0.0
+);
+
 //shd be set 0 , binding 2
 layout (binding = 2) buffer StorageBuffer
 {
@@ -29,43 +46,36 @@ layout (binding = 2) buffer StorageBuffer
 
 shared float scan[2 * HISTOGRAM256BINCOUNT]; // declare shared memory
 
-
-//when to use shared memory?
-//when to use atomic add?
-
 void main()
 {
-	// storageBuffer.buf.histoBin[0];
-	// // vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
-	// // vec4 res = vec4(pixel_color.r  * storageBuffer.buf.cdf[0], pixel_color.g,pixel_color.b , pixel_color.w);
-	// // imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res);
 
-	// float cdfMinY = storageBuffer.buf.cdf[0]; // min cdf value
-
-	// // uint tx = gl_LocalInvocationID.x;
-	// // uint tx = gl_GlobalInvocationID.x;
-
-    // ivec2 size = imageSize(inputImage); 			// gets the image2d size
+	float cdfMinY = storageBuffer.buf.cdf[0]; // min cdf value
 
 	// ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
-	// vec4 pixel_color = imageLoad(inputImage, xy_int);
+	// vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
 	
-	// uint i = (gl_GlobalInvocationID.y * size.x) + gl_GlobalInvocationID.x; 		// calcualte the index
-	// float y = CORRECT_COLOR(storageBuffer.buf.cdf[i], cdfMinY  );
-
-	// // float y = CORRECT_COLOR(storageBuffer.buf.cdf[uint(pixel_color.r)], cdfMinY  );
+    // ivec2 size = imageSize(inputImage); 			// gets the image2d size
+	// float y = CORRECT_COLOR(storageBuffer.buf.cdf[uint(pixel_color.r)], cdfMinY);
 	// float u =  pixel_color.g - 0.5f;
 	// float v =  pixel_color.b - 0.5f;
-	
-	// float r = clamp(y + 1.402 * v, 0 , 1.f);
-	// float g = clamp(y - 0.344 * u - 0.714 * v, 0 , 1.f); 
-	// float b = clamp(y + 1.772 * u , 0 , 1.f);
-	
+
+	// float r = clamp(y + 1.402f * v, 0 , 1.f);
+	// float g = clamp(y - 0.344f * u - 0.714f * v, 0 , 1.f); 
+	// float b = clamp(y + 1.772f * u , 0 , 1.f);
 
 	// // vec4 res = vec4(r,g,b,pixel_color.w);
-	// vec4 res = vec4(r,g,b,1);
-
+	// vec4 res = vec4(r,g,b,1.f);
 	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res);
 
+	vec3 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy)).rgb;
+	vec3 yuv = YUV * pixel_color; // calculating YUV 
+  	yuv.x = CORRECT_COLOR(storageBuffer.buf.cdf[int(yuv.x * 255.0)], cdfMinY);
+
+  	imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy),
+    vec4(clamp(RGB * yuv, 0.0, 1.0), 1.0));
+	
+	//debug
+	// float c = storageBuffer.buf.histoBin[0];
+	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), vec4( c, 0, 0, 1));
 
 }

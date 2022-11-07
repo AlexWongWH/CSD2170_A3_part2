@@ -24,32 +24,27 @@ layout (binding = 2) buffer StorageBuffer
 void main()
 {	
 
+	ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
 
+	////reset buf storage to 0
 	{
-    	ivec2 imgSize = imageSize(inputImage); // gets the image2d size
-		ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
-		int i = (xy_int.y * imgSize.x) + xy_int.x; 	// calculate the index
+    	// ivec2 imgSize = imageSize(inputImage); // gets the image2d size
+		int i = (xy_int.y * imageSize(inputImage).x) + xy_int.x; 	// calculate the index
 		storageBuffer.buf.histoBin[i] = 0;
 		storageBuffer.buf.cdf[i] = 0.f;
 	}
 
-
 	//might have to find better method
 	// Pixel color form the image
-	// vec4 pixel_color = imageLoad(inputImage, xy_int);
-	// ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
-	vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
+	vec4 pixel_color = imageLoad(inputImage, ivec2(xy_int));
+	/*genType clamp( genType x, genType minVal, genType maxVal); */
 	
 	//clamp thrown in to one line
 	float y = clamp( (0.299f * pixel_color.r) + (0.587f * pixel_color.g) + (0.114f * pixel_color.b), 0 , 1 );
 	float u = clamp( ((-0.169f * pixel_color.r) + (-0.331f * pixel_color.g) + (0.499f * pixel_color.b)) + 0.5f , 0 , 1 );
 	float v = clamp( ((0.499f * pixel_color.r) + (-0.418f * pixel_color.g) + (-0.0813f * pixel_color.b)) + 0.5f, 0 , 1 );
 	
-	/*genType clamp( genType x, genType minVal, genType maxVal); */
-	// float r = clamp(y, 0 , 1); // clamp between 0~255
-	// float g = clamp(u, 0 , 1); // clamp between 0~255
-	// float b = clamp(v, 0 , 1); // clamp between 0~255
-	
+
 	//// storing the result
 	// vec4 res = vec4(y,u,v,pixel_color.w);
 	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res); 
@@ -59,18 +54,12 @@ void main()
 
 	// //this condition check might be useless
 	// 	atomicAdd(storageBuffer.buf.histoBin[uint(r*255)],1); // this line might be wrong
-
 	// i = (row * width) + col // should not need this
 	// atomicAdd(storageBuffer.buf.histoBin[i],1); // this line should be wrong
 	
-	// // memoryBarrier();	
 	// // barrier();
 	// histogram on Y component
 	//histo[dataYUV[i]]++; // Histogram for Y
 	atomicAdd(storageBuffer.buf.histoBin[uint(y*255)],1); // shd be correct (checked)
-
-	//debug , checking if it's writing correctly
-	// storageBuffer.buf.histoBin[0] = 23;
-	// storageBuffer.buf.cdf[0] = 0.5f;
 
 }

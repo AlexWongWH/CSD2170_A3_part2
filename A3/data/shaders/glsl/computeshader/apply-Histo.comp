@@ -23,7 +23,6 @@ struct bufferHistoeq
 	float cdf[256];
 };
 
-
 const mat3 YUV = mat3    
 (
    0.299, -0.169,  0.499,

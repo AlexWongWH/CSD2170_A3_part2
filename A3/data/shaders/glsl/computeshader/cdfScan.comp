@@ -57,11 +57,4 @@ void main()
 	}
 
 
-
-	//debug checking if semaphores are correct
-	// float c = storageBuffer.buf.histoBin[0];
-	// // imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res);
-	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), vec4( c, 0, 0, 1));
-
-
 }

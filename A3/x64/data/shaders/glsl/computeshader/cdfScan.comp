@@ -2,12 +2,12 @@
 
 #define HISTOGRAM256BINCOUNT 256
 
-#define mymin( a , b ) ((( a ) < ( b )) ? ( a ) : ( b ) )
-#define mymax( a , b ) ((( a ) > ( b )) ? ( a ) : ( b ) )
+// #define mymin( a , b ) ((( a ) < ( b )) ? ( a ) : ( b ) )
+// #define mymax( a , b ) ((( a ) > ( b )) ? ( a ) : ( b ) )
+// #define CLAMP(x, start, end) (mymin(mymax((x),(start)),(end)))
 
-//change to function
+//change to function?
 #define PROB(x ,width, height) (x) / ((width) * (height))
-#define CLAMP(x, start, end) (mymin(mymax((x),(start)),(end)))
 
 
 layout (local_size_x = 16, local_size_y = 16) in;
@@ -32,27 +32,36 @@ void main()
 {	
 
 	// CDF scan - calculate cdf for histogram bias
-    // vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
+    vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
 	
-    // ivec2 size = imageSize(inputImage); // gets the image2d size
+    ivec2 imgSize = imageSize(inputImage); // gets the image2d size
 
-	// storageBuffer.buf.cdf[0] = PROB(float(storageBuffer.buf.histoBin[0]) , size.x, size.y);
+	//histoCDF[ 0 ] = PROB( (float)histo [0] , imgWidth , imgHeight );
+	storageBuffer.buf.cdf[0] = PROB(float(storageBuffer.buf.histoBin[0]) , imgSize.x, imgSize.y);
 
-	// // PROB((float)storageBuffer.buf.histo[0], size.x, size.y );
-	// // vec4 res = vec4(pixel_color.r * storageBuffer.buf.cdf[0], pixel_color.g,pixel_color.b  , pixel_color.w);
+	// PROB((float)storageBuffer.buf.histo[0], size.x, size.y );
+	// vec4 res = vec4(pixel_color.r * storageBuffer.buf.cdf[0], pixel_color.g,pixel_color.b  , pixel_color.w);
 
 	// ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
-	// int i = (xy_int.y * size.x) + xy_int.x; 	// calcualte the index
+	// int i = (xy_int.y * imgSize.x) + xy_int.x; 	// calculate the index
 	// if( i < HISTOGRAM256BINCOUNT )
 	// {
-	// 	float pdf = PROB(float(storageBuffer.buf.histoBin[i]) , size.x, size.y);
-	// 	storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.histoBin[i - 1];
+	// 	float pdf = PROB(float(storageBuffer.buf.histoBin[i]) , imgSize.x, imgSize.y);
+	// 	storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.cdf[i - 1];
 	// }
 
+	for( int i = 1 ; i < HISTOGRAM256BINCOUNT; ++i )
+	{
+		float pdf = PROB(float(storageBuffer.buf.histoBin[i]) , imgSize.x, imgSize.y);
+		storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.cdf[i - 1];
+	}
 
-	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res);
-	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), pixel_color);
 
+
+	//debug checking if semaphores are correct
+	// float c = storageBuffer.buf.histoBin[0];
+	// // imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res);
+	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), vec4( c, 0, 0, 1));
 
 
 }

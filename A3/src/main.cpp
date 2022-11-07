@@ -122,6 +122,14 @@ public:
 		vkDestroyDescriptorSetLayout(device, graphics.descriptorSetLayout, nullptr);
 		vkDestroySemaphore(device, graphics.semaphore, nullptr);
 
+		vkDestroyDescriptorSetLayout(device, compute.CDFApplydescriptorSetLayout, nullptr);
+
+		vkDestroySemaphore(device, compute.HistoSemaphore, nullptr);
+		vkDestroySemaphore(device, compute.CdfSemaphore, nullptr);
+		vkDestroySemaphore(device, compute.ApplySemaphore, nullptr);
+
+
+
 		// Compute
 		for (auto& pipeline : compute.pipelines)
 		{
@@ -686,43 +694,43 @@ public:
 		// Get a compute queue from the device
 		vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.compute, 0, &compute.queue);
 
-		// Create compute pipeline
-		// Compute pipelines are created separate from graphics pipelines even if they use the same queue
+		//// Create compute pipeline
+		//// Compute pipelines are created separate from graphics pipelines even if they use the same queue
 
-		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
-		{
-			// Binding 0: Input image (read-only)
-			vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 0),
-			// Binding 1: Output image (write)
-			vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 1),
+		//std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
+		//{
+		//	// Binding 0: Input image (read-only)
+		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 0),
+		//	// Binding 1: Output image (write)
+		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 1),
 
-			vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 2),
+		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 2),
 
-		};
+		//};
 
-		VkDescriptorSetLayoutCreateInfo descriptorLayout = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
-		VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &compute.CDFApplydescriptorSetLayout));
+		//VkDescriptorSetLayoutCreateInfo descriptorLayout = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
+		//VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &compute.CDFApplydescriptorSetLayout));
 
-		VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-			vks::initializers::pipelineLayoutCreateInfo(&compute.CDFApplydescriptorSetLayout, 1); // stopped here 
+		//VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
+		//	vks::initializers::pipelineLayoutCreateInfo(&compute.CDFApplydescriptorSetLayout, 1); // stopped here 
 
-		VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &compute.pipelineLayout));
+		//VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &compute.pipelineLayout));
 
-		VkDescriptorSetAllocateInfo allocInfo =
-			vks::initializers::descriptorSetAllocateInfo(descriptorPool, &compute.CDFApplydescriptorSetLayout, 1);
+		//VkDescriptorSetAllocateInfo allocInfo =
+		//	vks::initializers::descriptorSetAllocateInfo(descriptorPool, &compute.CDFApplydescriptorSetLayout, 1);
 
-		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &compute.CDFApplydescriptorSet));
+		//VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &compute.CDFApplydescriptorSet));
 
-		std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = {
+		//std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = {
 
-			
-			vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
-			//vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureComputeTarget.descriptor),
-			vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor),
-			vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2, &m_storageBuffer.descriptor) // write descriptor
+		//	
+		//	vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
+		//	//vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureComputeTarget.descriptor),
+		//	vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor),
+		//	vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2, &m_storageBuffer.descriptor) // write descriptor
 
-		};
-		vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
+		//};
+		//vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
 
 		// Create compute shader pipelines
 		VkComputePipelineCreateInfo computePipelineCreateInfo =
@@ -848,50 +856,6 @@ public:
 	{
 		// Get a compute queue from the device
 		vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.compute, 0, &compute.queue);
-
-		// Create compute pipeline
-		// Compute pipelines are created separate from graphics pipelines even if they use the same queue
-
-		//std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
-		//{
-		//	// Binding 0: Input image (read-only)
-		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 0),
-		//	// Binding 1: Output image (write)
-		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 1),
-		//};
-
-		//VkDescriptorSetLayoutCreateInfo descriptorLayout = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
-		//VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &compute.descriptorSetLayout));
-
-		//VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-		//	vks::initializers::pipelineLayoutCreateInfo(&compute.descriptorSetLayout, 1);
-
-		//VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &compute.pipelineLayout));
-
-		//VkDescriptorSetAllocateInfo allocInfo =
-		//	vks::initializers::descriptorSetAllocateInfo(descriptorPool, &compute.descriptorSetLayout, 1);
-
-		//VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &compute.descriptorSet));
-
-		//std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = 
-		//{
-		//	vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureComputeTarget.descriptor),
-		//	vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor),
-		//	vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2, &m_storageBuffer.descriptor) // write descriptor
-
-		//};
-		//vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
-
-		std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets =
-		{
-			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
-			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor),
-			vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2, &m_storageBuffer.descriptor) // write descriptor
-		};
-
-		//this commands makes it point to the relevant buffers
-		vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
-
 
 		// Create compute shader pipelines
 		VkComputePipelineCreateInfo computePipelineCreateInfo =

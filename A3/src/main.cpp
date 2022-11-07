@@ -1117,7 +1117,7 @@ public:
 			return;
 		draw();
 
-
+		updateStorageBuffers();
 
 		if (camera.updated) {
 			updateUniformBuffers();

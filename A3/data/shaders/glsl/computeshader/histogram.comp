@@ -25,7 +25,6 @@ void main()
 {	
 
 
-	// for(int i = 0 ;i < HISTOGRAM256BINCOUNT; ++i)
 	{
     	ivec2 imgSize = imageSize(inputImage); // gets the image2d size
 		ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
@@ -52,17 +51,14 @@ void main()
 	// float b = clamp(v, 0 , 1); // clamp between 0~255
 	
 	//// storing the result
-	// vec4 res = vec4(r,g,b,pixel_color.w);
+	// vec4 res = vec4(y,u,v,pixel_color.w);
 	// imageStore(resultImage, ivec2(gl_GlobalInvocationID.xy), res); 
 
     // ivec2 size = imageSize(inputImage); // gets the image2d size
     // int imgSize = size.x * size.y; 		// img size, not used yet
 
 	// //this condition check might be useless
-	// if( gl_GlobalInvocationID.x * gl_GlobalInvocationID.y < imgSize)
-	// {
 	// 	atomicAdd(storageBuffer.buf.histoBin[uint(r*255)],1); // this line might be wrong
-	// }
 
 	// i = (row * width) + col // should not need this
 	// atomicAdd(storageBuffer.buf.histoBin[i],1); // this line should be wrong
@@ -75,6 +71,6 @@ void main()
 
 	//debug , checking if it's writing correctly
 	// storageBuffer.buf.histoBin[0] = 23;
-	// // storageBuffer.buf.cdf[0] = 0.5f;
+	// storageBuffer.buf.cdf[0] = 0.5f;
 
 }

@@ -364,6 +364,9 @@ public:
 
 		VK_CHECK_RESULT(vkBeginCommandBuffer(compute.HistoCommandBuffer, &cmdBufInfo));
 
+		//set storage buf to 0 when sending to histo
+		vkCmdFillBuffer(compute.HistoCommandBuffer, m_storageBuffer.buffer, m_storageBuffer.descriptor.offset, m_storageBuffer.descriptor.range, 0);
+
 		vkCmdBindPipeline(compute.HistoCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute.pipelines[0]);
 		//same pipeline layout and descriptor set
 		vkCmdBindDescriptorSets(compute.HistoCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute.pipelineLayout, 0, 1, &compute.descriptorSet, 0, 0);
@@ -908,7 +911,6 @@ public:
 		// Map persistent
 		VK_CHECK_RESULT(m_storageBuffer.map());
 
-		//updateUniformBuffers();
 		updateStorageBuffers(); // empties and map the buf with 0
 	}
 
@@ -1006,48 +1008,39 @@ public:
 
 		VkAppBase::submitFrame();
 
-		static bool first = true;
-		if(first)
-		{
-
-			// Move the data to the GPU
-			//memcpy(m_storageBuffer.mapped, &bufferHistoeq, sizeof(bufferHistoeq));
-
-			// Move the data back
-			memcpy(&bufferHistoeq, m_storageBuffer.mapped, sizeof(bufferHistoeq));
-
-			std::ofstream file("histogram.txt", std::ios::out | std::ios::binary);
-
-			//int chitsbin;
-			//chitsbin = 0;
-			//float cdfsum;
-			//cdfsum = 0.f;
-
-			file << "\n/*MINE ! histogram bins*/\n";
-
-			for (int i{ 1 }; i <= 256; ++i)
-			{
-				file << bufferHistoeq.histoBin[i - 1] << " "; // change this to storage buffer
-				if (i % 4 == 0)
-				{
-					file << "\n";
-				}
-			}
-
-			file << "\n/* Cdf */\n";
-			for (int i{ 1 }; i <= 256; ++i)
-			{
-				file << bufferHistoeq.cdf[i-1] << " "; // change this to storage buffer
-				if (i % 4 == 0)
-				{
-					file << "\n";
-				}
-			}
-
-			file.close();
-
-			first = false;
-		}
+		//static bool first = true;
+		//if(first)
+		//{
+		//	// Move the data to the GPU
+		//	//memcpy(m_storageBuffer.mapped, &bufferHistoeq, sizeof(bufferHistoeq));
+		//	// Move the data back
+		//	memcpy(&bufferHistoeq, m_storageBuffer.mapped, sizeof(bufferHistoeq));
+		//	std::ofstream file("histogram.txt", std::ios::out | std::ios::binary);
+		//	//int chitsbin;
+		//	//chitsbin = 0;
+		//	//float cdfsum;
+		//	//cdfsum = 0.f;
+		//	file << "\n/*MINE ! histogram bins*/\n";
+		//	for (int i{ 1 }; i <= 256; ++i)
+		//	{
+		//		file << bufferHistoeq.histoBin[i - 1] << " "; // change this to storage buffer
+		//		if (i % 4 == 0)
+		//		{
+		//			file << "\n";
+		//		}
+		//	}
+		//	file << "\n/* Cdf */\n";
+		//	for (int i{ 1 }; i <= 256; ++i)
+		//	{
+		//		file << bufferHistoeq.cdf[i-1] << " "; // change this to storage buffer
+		//		if (i % 4 == 0)
+		//		{
+		//			file << "\n";
+		//		}
+		//	}
+		//	file.close();
+		//	first = false;
+		//}
 
 
 	}
@@ -1081,7 +1074,7 @@ public:
 			return;
 		draw();
 
-		updateStorageBuffers();
+		//updateStorageBuffers(); // might not be needed
 
 		if (camera.updated) {
 			updateUniformBuffers();

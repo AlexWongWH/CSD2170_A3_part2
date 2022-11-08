@@ -2,13 +2,7 @@
 
 #define HISTOGRAM256BINCOUNT 256
 
-// #define mymin( a , b ) ((( a ) < ( b )) ? ( a ) : ( b ) )
-// #define mymax( a , b ) ((( a ) > ( b )) ? ( a ) : ( b ) )
-// #define CLAMP(x, start, end) (mymin(mymax((x),(start)),(end)))
-
-//change to function?
 #define PROB(x ,width, height) (x) / ((width) * (height))
-
 
 layout (local_size_x = 16, local_size_y = 16) in;
 layout (binding = 0, rgba8) uniform readonly image2D inputImage;
@@ -25,36 +19,51 @@ layout (binding = 2) buffer StorageBuffer
 	bufferHistoeq buf;
 } storageBuffer;
 
-shared float scan[2 * HISTOGRAM256BINCOUNT]; // declare shared memory
+shared uint sMemory 	[HISTOGRAM256BINCOUNT]; // declare shared memory
+shared float sCDFMemory [HISTOGRAM256BINCOUNT]; // declare shared memory
 
 
 void main()
 {	
 
-	// CDF scan - calculate cdf for histogram bias
-    vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
-	
+	// loading histo values to shared memory
+	ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy);
     ivec2 imgSize = imageSize(inputImage); // gets the image2d size
+	
+	//load to shared memory
+	if(xy_int.x < imgSize.x && xy_int.y < imgSize.y )
+	{
+		sMemory[gl_LocalInvocationIndex] = uint(storageBuffer.buf.histoBin[gl_LocalInvocationIndex]);
+	}
+	memoryBarrierShared();
+	// barrier();
 
+    vec4 pixel_color = imageLoad(inputImage, ivec2(xy_int));
+	
 	//histoCDF[ 0 ] = PROB( (float)histo [0] , imgWidth , imgHeight );
-	storageBuffer.buf.cdf[0] = PROB(float(storageBuffer.buf.histoBin[0]) , imgSize.x, imgSize.y);
+	storageBuffer.buf.cdf[0] = PROB(float(sMemory[0]) , imgSize.x, imgSize.y);
 
-	// PROB((float)storageBuffer.buf.histo[0], size.x, size.y );
-	// vec4 res = vec4(pixel_color.r * storageBuffer.buf.cdf[0], pixel_color.g,pixel_color.b  , pixel_color.w);
+	//accumulate
+	for( int i = 1 ; i < HISTOGRAM256BINCOUNT; ++i )
+	{
+		float pdf = PROB(float(sMemory[i]) , imgSize.x, imgSize.y);
+		storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.cdf[i - 1];
+	}
 
-	// ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy); // x and y of current pixel in the image
-	// int i = (xy_int.y * imgSize.x) + xy_int.x; 	// calculate the index
-	// if( i < HISTOGRAM256BINCOUNT )
+
+    // ivec2 imgSize = imageSize(inputImage); // gets the image2d size
+	// // CDF scan - calculate cdf for histogram bias
+    // vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
+	
+	// //histoCDF[ 0 ] = PROB( (float)histo [0] , imgWidth , imgHeight );
+	// storageBuffer.buf.cdf[0] = PROB(float(storageBuffer.buf.histoBin[0]) , imgSize.x, imgSize.y);
+
+	// for( int i = 1 ; i < HISTOGRAM256BINCOUNT; ++i )
 	// {
 	// 	float pdf = PROB(float(storageBuffer.buf.histoBin[i]) , imgSize.x, imgSize.y);
 	// 	storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.cdf[i - 1];
 	// }
 
-	for( int i = 1 ; i < HISTOGRAM256BINCOUNT; ++i )
-	{
-		float pdf = PROB(float(storageBuffer.buf.histoBin[i]) , imgSize.x, imgSize.y);
-		storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.cdf[i - 1];
-	}
 
 
 }

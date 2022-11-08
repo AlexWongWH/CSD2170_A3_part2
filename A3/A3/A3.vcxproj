@@ -135,7 +135,6 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;NOMINMAX;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\VulkanTest\ktx\other_include;C:\VulkanTest\ktx\include;C:\VulkanTest\imgui;C:\VulkanSDK\1.2.170.0\Include;C:\VulkanSDK\glfw-3.3.3.bin.WIN64\include;C:\VulkanSDK\glm\glm-master;$(SolutionDir)lib\glfw-3.3.8.bin.WIN64\include;$(SolutionDir)lib\ktx\include;$(SolutionDir)lib\ktx\other_include;$(SolutionDir)lib\imgui;$(SolutionDir)lib\glm\glm-master;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
-      <AdditionalOptions>--validation %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

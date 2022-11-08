@@ -73,10 +73,6 @@ public:
 		VkDescriptorSetLayout descriptorSetLayout;	// Compute shader binding layout
 		VkDescriptorSet descriptorSet;				// Compute shader bindings
 
-		//need to deallocate this
-		VkDescriptorSetLayout CDFApplydescriptorSetLayout;	// Compute shader binding layout
-		VkDescriptorSet CDFApplydescriptorSet;				// Compute shader bindings
-
 		VkPipelineLayout pipelineLayout;			// Layout of the compute pipeline
 		std::vector<VkPipeline> pipelines;			// Compute pipelines for image filters
 		int32_t pipelineIndex = 0;					// Current image filtering compute pipeline index
@@ -113,7 +109,7 @@ public:
 		camera.setPerspective(60.0f, (float)width * 0.5f / (float)height, 1.0f, 256.0f);
 	}
 
-	//Have to destory extra command buffers and ppooooooll
+
 	~VulkanExample()
 	{
 		// Graphics
@@ -122,13 +118,10 @@ public:
 		vkDestroyDescriptorSetLayout(device, graphics.descriptorSetLayout, nullptr);
 		vkDestroySemaphore(device, graphics.semaphore, nullptr);
 
-		vkDestroyDescriptorSetLayout(device, compute.CDFApplydescriptorSetLayout, nullptr);
 
 		vkDestroySemaphore(device, compute.HistoSemaphore, nullptr);
 		vkDestroySemaphore(device, compute.CdfSemaphore, nullptr);
 		vkDestroySemaphore(device, compute.ApplySemaphore, nullptr);
-
-
 
 		// Compute
 		for (auto& pipeline : compute.pipelines)
@@ -138,11 +131,14 @@ public:
 		vkDestroyPipelineLayout(device, compute.pipelineLayout, nullptr);
 		vkDestroyDescriptorSetLayout(device, compute.descriptorSetLayout, nullptr);
 		//vkDestroySemaphore(device, compute.semaphore, nullptr);
+
+		
 		vkDestroyCommandPool(device, compute.commandPool, nullptr);
 
 		vertexBuffer.destroy();
 		indexBuffer.destroy();
 		uniformBufferVS.destroy();
+		m_storageBuffer.destroy(); // destroy storage buffer
 
 		textureColorMap.destroy();
 		textureComputeTarget.destroy();
@@ -904,7 +900,7 @@ public:
 	{
 		VK_CHECK_RESULT(vulkanDevice->createBuffer(
 			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, //storage buffer bit
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 			&m_storageBuffer,
 			sizeof(bufferHistoeq)));
 

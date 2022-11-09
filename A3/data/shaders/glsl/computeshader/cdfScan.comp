@@ -1,10 +1,24 @@
+/* Start Header *****************************************************************/ 
+
+/*! \file csdScan.comp \author Wong Wei Hao, w.weihao, 390007020
+
+  \par w.weihao@digipen.edu
+
+  \date Nov 11, 2022
+
+  \brief Copyright (C) 2022 DigiPen Institute of Technology. 
+
+  Reproduction or disclosure of this file or its contents without the prior written consent of DigiPen Institute of Technology is prohibited. */ 
+
+/* End Header *******************************************************************/ 
+
 #version 450
 
 #define HISTOGRAM256BINCOUNT 256
-
 #define PROB(x ,width, height) (x) / ((width) * (height))
 
-layout (local_size_x = 16, local_size_y = 16) in;
+// layout (local_size_x = 16, local_size_y = 16) in;
+layout (local_size_x = 128) in;
 layout (binding = 0, rgba8) uniform readonly image2D inputImage;
 layout (binding = 1, rgba8) uniform image2D resultImage;
 
@@ -19,51 +33,86 @@ layout (binding = 2) buffer StorageBuffer
 	bufferHistoeq buf;
 } storageBuffer;
 
-shared uint sMemory 	[HISTOGRAM256BINCOUNT]; // declare shared memory
-shared float sCDFMemory [HISTOGRAM256BINCOUNT]; // declare shared memory
+shared uint sMemory [HISTOGRAM256BINCOUNT]; // declare shared memory
 
 
 void main()
-{	
+{
 
-	// loading histo values to shared memory
-	ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 imgSize = imageSize(inputImage); // gets the image2d size
-	
-	//load to shared memory
-	if(xy_int.x < imgSize.x && xy_int.y < imgSize.y )
-	{
-		sMemory[gl_LocalInvocationIndex] = uint(storageBuffer.buf.histoBin[gl_LocalInvocationIndex]);
-	}
-	memoryBarrierShared();
-	// barrier();
+// 	// loading histo values to shared memory
+// 	ivec2 xy_int = ivec2(gl_GlobalInvocationID.xy);
+//     ivec2 imgSize = imageSize(inputImage); // gets the image2d size
+// 	//load to shared memory
+// 	if(xy_int.x < imgSize.x && xy_int.y < imgSize.y )
+// 	{
+// 		sMemory[gl_LocalInvocationIndex] = uint(storageBuffer.buf.histoBin[gl_LocalInvocationIndex]);
+// 	}
+// 	memoryBarrierShared();
+// 	// barrier();
+//     vec4 pixel_color = imageLoad(inputImage, ivec2(xy_int));
+// 	//histoCDF[ 0 ] = PROB( (float)histo [0] , imgWidth , imgHeight );
+// 	storageBuffer.buf.cdf[0] = PROB(float(sMemory[0]) , imgSize.x, imgSize.y);
+// 	//accumulate
+// 	for( int i = 1 ; i < HISTOGRAM256BINCOUNT; ++i )
+// 	{
+// 		float pdf = PROB(float(sMemory[i]) , imgSize.x, imgSize.y);
+// 		storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.cdf[i - 1];
+// 	}
+//     // ivec2 imgSize = imageSize(inputImage); // gets the image2d size
+// 	// // CDF scan - calculate cdf for histogram bias
+//     // vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
+// 	// //histoCDF[ 0 ] = PROB( (float)histo [0] , imgWidth , imgHeight );
+// 	// storageBuffer.buf.cdf[0] = PROB(float(storageBuffer.buf.histoBin[0]) , imgSize.x, imgSize.y);
+// 	// for( int i = 1 ; i < HISTOGRAM256BINCOUNT; ++i )
+// 	// {
+// 	// 	float pdf = PROB(float(storageBuffer.buf.histoBin[i]) , imgSize.x, imgSize.y);
+// 	// 	storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.cdf[i - 1];
+// 	// }
 
-    vec4 pixel_color = imageLoad(inputImage, ivec2(xy_int));
-	
-	//histoCDF[ 0 ] = PROB( (float)histo [0] , imgWidth , imgHeight );
-	storageBuffer.buf.cdf[0] = PROB(float(sMemory[0]) , imgSize.x, imgSize.y);
+  int threadIdx = int(gl_LocalInvocationIndex);
+  int blockSize = int(gl_WorkGroupSize.x);
 
-	//accumulate
-	for( int i = 1 ; i < HISTOGRAM256BINCOUNT; ++i )
-	{
-		float pdf = PROB(float(sMemory[i]) , imgSize.x, imgSize.y);
-		storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.cdf[i - 1];
-	}
+	//outHisto.m_Data.m_Bin = storageBuffer.buf.histoBin
 
+  for (int i = 0; i < 2; ++i)
+  {
+    int idx = threadIdx + i * blockSize;
+    sMemory[idx] = storageBuffer.buf.histoBin[idx];
+    memoryBarrierShared();
+  }
 
-    // ivec2 imgSize = imageSize(inputImage); // gets the image2d size
-	// // CDF scan - calculate cdf for histogram bias
-    // vec4 pixel_color = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy));
-	
-	// //histoCDF[ 0 ] = PROB( (float)histo [0] , imgWidth , imgHeight );
-	// storageBuffer.buf.cdf[0] = PROB(float(storageBuffer.buf.histoBin[0]) , imgSize.x, imgSize.y);
+  for (int stride = 1; stride < 256; stride *= 2)
+  {
+    int idx0 = (threadIdx + 1) * stride * 2 - 1;
+    int idx1 = idx0 - stride;
+    if (idx0 < 256 && idx1 >= 0)
+    { 
+      sMemory[idx0] += sMemory[idx1];
+    }
+    barrier();
+  }
 
-	// for( int i = 1 ; i < HISTOGRAM256BINCOUNT; ++i )
-	// {
-	// 	float pdf = PROB(float(storageBuffer.buf.histoBin[i]) , imgSize.x, imgSize.y);
-	// 	storageBuffer.buf.cdf[i] = pdf + storageBuffer.buf.cdf[i - 1];
-	// }
+  for (int stride = 64; stride > 0; stride /= 2)
+  {
+    barrier();
+    int idx0 = (threadIdx + 1) * stride * 2 - 1;
+    int idx1 = idx0 + stride;
+    if (idx1 < 256)
+    {
+      sMemory[idx1] += sMemory[idx0];
+    }
+  }
 
+  barrier();  
 
+  ivec2 imgSize = imageSize(inputImage);
+  float cDiv = 1.0 / float(imgSize.x * imgSize.y);
+  for (int i = 0; i < 2; ++i)
+  {
+
+    memoryBarrierShared();// for coalesced access
+    int idx = threadIdx + i * blockSize;
+    storageBuffer.buf.cdf[idx] = cDiv * sMemory[idx];
+  }
 
 }

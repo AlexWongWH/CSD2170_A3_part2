@@ -13,6 +13,20 @@
 *
 */
 
+/* Start Header *****************************************************************/
+
+/*! \file main.cpp \author Wong Wei Hao, w.weihao, 390007020
+
+  \par w.weihao@digipen.edu
+
+  \date Nov 11, 2022
+
+  \brief Copyright (C) 2022 DigiPen Institute of Technology.
+
+  Reproduction or disclosure of this file or its contents without the prior written consent of DigiPen Institute of Technology is prohibited. */
+
+  /* End Header *******************************************************************/
+
 
 #include "appBase.h"
 #define GLFW_INCLUDE_VULKAN
@@ -27,8 +41,6 @@ struct Vertex {
 	float pos[3];
 	float uv[2];
 };
-
-
 
 
 class VulkanExample : public VkAppBase
@@ -391,7 +403,9 @@ public:
 		//groupCountX is the number of local workgroups to dispatch in the X dimension.
 		//groupCountY is the number of local workgroups to dispatch in the Y dimension.
 		//groupCountZ is the number of local workgroups to dispatch in the Z dimension.
-		vkCmdDispatch(compute.CdfCommandBuffer, (textureComputeTarget.width + 15) / 16, (textureComputeTarget.height + 15) / 16, 1);
+
+		//vkCmdDispatch(compute.CdfCommandBuffer, (textureComputeTarget.width + 15) / 16, (textureComputeTarget.height + 15) / 16, 1);
+		vkCmdDispatch(compute.CdfCommandBuffer, 1, 1, 1);
 
 		vkEndCommandBuffer(compute.CdfCommandBuffer);
 	}
@@ -629,64 +643,6 @@ public:
 		VK_CHECK_RESULT(vkQueueWaitIdle(queue));
 	}
 
-	//void prepareCompute()
-	//{
-	//	// Get a compute queue from the device
-	//	vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.compute, 0, &compute.queue);
-	//	// Create compute pipeline
-	//	// Compute pipelines are created separate from graphics pipelines even if they use the same queue
-	//	std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = 
-	//	{
-	//		// Binding 0: Input image (read-only)
-	//		vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 0),
-	//		// Binding 1: Output image (write)
-	//		vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 1),
-	//	};
-	//	VkDescriptorSetLayoutCreateInfo descriptorLayout = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
-	//	VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &compute.descriptorSetLayout));
-	//	VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-	//		vks::initializers::pipelineLayoutCreateInfo(&compute.descriptorSetLayout, 1);
-	//	VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &compute.pipelineLayout));
-	//	VkDescriptorSetAllocateInfo allocInfo =
-	//		vks::initializers::descriptorSetAllocateInfo(descriptorPool, &compute.descriptorSetLayout, 1);
-	//	VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &compute.descriptorSet));
-	//	std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = {
-	//		vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
-	//		vks::initializers::writeDescriptorSet(compute.descriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor)
-	//	};
-	//	vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
-	//	// Create compute shader pipelines
-	//	VkComputePipelineCreateInfo computePipelineCreateInfo =
-	//		vks::initializers::computePipelineCreateInfo(compute.pipelineLayout, 0);
-	//	// One pipeline for each effect
-	//	shaderNames = { "emboss" };
-	//	for (auto& shaderName : shaderNames) {
-	//		std::string fileName = getShadersPath() + "computeshader/" + shaderName + ".comp.spv";
-	//		computePipelineCreateInfo.stage = loadShader(fileName, VK_SHADER_STAGE_COMPUTE_BIT);
-	//		VkPipeline pipeline;
-	//		VK_CHECK_RESULT(vkCreateComputePipelines(device, pipelineCache, 1, &computePipelineCreateInfo, nullptr, &pipeline));
-	//		compute.pipelines.push_back(pipeline);
-	//	}
-	//	// Separate command pool as queue family for compute may be different than graphics
-	//	VkCommandPoolCreateInfo cmdPoolInfo = {};
-	//	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	//	cmdPoolInfo.queueFamilyIndex = vulkanDevice->queueFamilyIndices.compute;
-	//	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	//	VK_CHECK_RESULT(vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &compute.commandPool));
-	//	// Create a command buffer for compute operations
-	//	VkCommandBufferAllocateInfo cmdBufAllocateInfo =
-	//		vks::initializers::commandBufferAllocateInfo(
-	//			compute.commandPool,
-	//			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	//			1);
-	//	VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &compute.commandBuffer));
-	//	// Semaphore for compute & graphics sync
-	//	VkSemaphoreCreateInfo semaphoreCreateInfo = vks::initializers::semaphoreCreateInfo();
-	//	VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &compute.semaphore));
-	//	// Build a single command buffer containing the compute dispatch commands
-	//	//buildComputeCommandBuffer();
-	//}
-
 	//2nd part, modify this input to textureComputeTarget
 	void prepareComputeCDF()
 	{
@@ -695,41 +651,6 @@ public:
 
 		//// Create compute pipeline
 		//// Compute pipelines are created separate from graphics pipelines even if they use the same queue
-
-		//std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
-		//{
-		//	// Binding 0: Input image (read-only)
-		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 0),
-		//	// Binding 1: Output image (write)
-		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, 1),
-
-		//	vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 2),
-
-		//};
-
-		//VkDescriptorSetLayoutCreateInfo descriptorLayout = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
-		//VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &compute.CDFApplydescriptorSetLayout));
-
-		//VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-		//	vks::initializers::pipelineLayoutCreateInfo(&compute.CDFApplydescriptorSetLayout, 1); // stopped here 
-
-		//VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &compute.pipelineLayout));
-
-		//VkDescriptorSetAllocateInfo allocInfo =
-		//	vks::initializers::descriptorSetAllocateInfo(descriptorPool, &compute.CDFApplydescriptorSetLayout, 1);
-
-		//VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &compute.CDFApplydescriptorSet));
-
-		//std::vector<VkWriteDescriptorSet> computeWriteDescriptorSets = {
-
-		//	
-		//	vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureColorMap.descriptor),
-		//	//vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0, &textureComputeTarget.descriptor),
-		//	vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, &textureComputeTarget.descriptor),
-		//	vks::initializers::writeDescriptorSet(compute.CDFApplydescriptorSet, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2, &m_storageBuffer.descriptor) // write descriptor
-
-		//};
-		//vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
 
 		// Create compute shader pipelines
 		VkComputePipelineCreateInfo computePipelineCreateInfo =
@@ -861,7 +782,7 @@ public:
 			vks::initializers::computePipelineCreateInfo(compute.pipelineLayout, 0);
 
 		// One pipeline for each effect
-		shaderNames = { "apply-histo" };
+		shaderNames = { "applyhisto" };
 		for (auto& shaderName : shaderNames) {
 			std::string fileName = getShadersPath() + "computeshader/" + shaderName + ".comp.spv";
 			computePipelineCreateInfo.stage = loadShader(fileName, VK_SHADER_STAGE_COMPUTE_BIT);

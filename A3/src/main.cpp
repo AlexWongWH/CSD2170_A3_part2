@@ -19,7 +19,7 @@
 
   \par w.weihao@digipen.edu
 
-  \date Nov 11, 2022
+  \date Nov 9, 2022
 
   \brief Copyright (C) 2022 DigiPen Institute of Technology.
 
@@ -657,7 +657,7 @@ public:
 			vks::initializers::computePipelineCreateInfo(compute.pipelineLayout, 0);
 
 		// One pipeline for each effect
-		shaderNames = { "cdfScan" };
+		shaderNames = { "cdfscan" };
 		for (auto& shaderName : shaderNames) {
 			std::string fileName = getShadersPath() + "computeshader/" + shaderName + ".comp.spv";
 			computePipelineCreateInfo.stage = loadShader(fileName, VK_SHADER_STAGE_COMPUTE_BIT);
